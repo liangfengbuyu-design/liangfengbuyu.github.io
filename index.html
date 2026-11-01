@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>资治通鉴 · 卷一刷题器</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#2b2622">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="通鉴刷题">
+
+  <link rel="stylesheet" href="assets/app.css">
+  <link rel="stylesheet" href="src/pages/home/style.css">
+  <link rel="stylesheet" href="src/pages/quiz/style.css">
+  <link rel="stylesheet" href="src/pages/summary/style.css">
+  <link rel="stylesheet" href="src/pages/wrong/style.css">
+  <link rel="stylesheet" href="src/pages/stats/style.css">
+  <link rel="stylesheet" href="src/pages/settings/style.css">
+  <link rel="stylesheet" href="src/pages/review/style.css">
+</head>
+<body>
+  <div id="app"></div>
+  <nav id="tabs" class="tabs"></nav>
+
+  <!--
+    必须通过本地服务访问（run.bat）。
+    ES Modules 在 file:// 协议下会被浏览器的跨域策略阻止。
+  -->
+  <script type="module" src="src/main.js"></script>
+  <script type="module" src="pwa.js"></script>
+</body>
+</html>

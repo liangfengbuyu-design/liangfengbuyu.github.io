@@ -1,0 +1,131 @@
+/* 错题本（S4）样式 */
+
+.wrong-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.wrong-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 13px 14px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.wrong-row:active {
+  background: var(--bg);
+}
+
+.wrong-row:last-child {
+  border-bottom: none;
+}
+
+.wrong-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.wrong-stem {
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.wrong-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.wrong-meta .chip {
+  margin: 0;
+}
+
+.wrong-time {
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+/* 右侧：连对进度 + 移出 */
+
+.wrong-side {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.dots {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--accent);
+}
+
+.dots-label {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.link-btn {
+  margin-top: 3px;
+  padding: 2px 0;
+  font-size: 11.5px;
+  font-family: inherit;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.link-btn:hover {
+  color: var(--err);
+}
+
+/* 空态 */
+
+.empty-state {
+  margin-top: 40px;
+  text-align: center;
+}
+
+.empty-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 6px;
+}
+
+.empty-state .muted {
+  margin: 0 0 22px;
+}
+
+.empty-state .btn {
+  display: inline-block;
+  width: auto;
+  padding-left: 28px;
+  padding-right: 28px;
+}
+
+/* 底部操作 */
+
+.wrong-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 22px;
+}

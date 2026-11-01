@@ -1,0 +1,95 @@
+/* 统计页（S5）样式
+   注：分题型对比条（.type-table 系列）在 assets/app.css 中共用，此处只放事件排行。 */
+
+.tag-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.tag-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tag-row:last-child {
+  border-bottom: none;
+}
+
+.tag-row-name {
+  flex: 0 0 74px;
+  font-size: 12.5px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tag-row-bar {
+  flex: 1 1 auto;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.tag-row-fill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+}
+
+.tag-row-value {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.tag-row-count {
+  font-size: 10.5px;
+  opacity: 0.7;
+}
+
+/* 最弱的三项：条与数值标红 */
+
+.tag-row-weak .tag-row-fill {
+  background: var(--err);
+}
+
+.tag-row-weak .tag-row-value {
+  color: var(--err);
+  font-weight: 600;
+}
+
+/* 样本不足：整体降透明度，提示「仅供参考」 */
+
+.tag-row-thin {
+  opacity: 0.62;
+}
+
+/* 完全没练过 */
+
+.tag-row-empty .tag-row-name {
+  color: var(--text-muted);
+}
+
+.tag-row-empty .tag-row-value {
+  opacity: 0.6;
+}
+
+.tag-legend {
+  margin: 8px 0 0;
+  line-height: 1.6;
+}

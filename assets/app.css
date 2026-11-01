@@ -1,0 +1,477 @@
+/* ==========================================================================
+   全局样式 · 《资治通鉴》卷一刷题器
+   规范 V3：样式集中于此，用 CSS 变量控主题；不使用复杂层级选择器（WXSS 只支持部分）。
+   ========================================================================== */
+
+:root {
+  --bg: #faf7f2;
+  --surface: #ffffff;
+  --border: #e2dbd0;
+  --text: #2b2622;
+  --text-muted: #7a7168;
+  --accent: #a0522d;
+  --ok: #2f6f4f;
+  --ok-bg: #e8f3ec;
+  --err: #9b2c2c;
+  --err-bg: #fbeaea;
+  --radius: 10px;
+  --pad: 16px;
+}
+
+/* 暗色变量：系统偏好 + 用户显式选择，两处共用同一组值 */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #16140f;
+    --surface: #201d18;
+    --border: #3a342c;
+    --text: #e8e3da;
+    --text-muted: #9a9287;
+    --accent: #c97b4e;
+    --ok: #7fbf9a;
+    --ok-bg: #1d2b23;
+    --err: #e08c8c;
+    --err-bg: #2e1d1d;
+  }
+}
+
+/* 用户在设置里显式选了「深色」 */
+:root[data-theme="dark"] {
+  --bg: #16140f;
+  --surface: #201d18;
+  --border: #3a342c;
+  --text: #e8e3da;
+  --text-muted: #9a9287;
+  --accent: #c97b4e;
+  --ok: #7fbf9a;
+  --ok-bg: #1d2b23;
+  --err: #e08c8c;
+  --err-bg: #2e1d1d;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  font-size: 15px;
+  line-height: 1.7;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* ---------------- 布局 ---------------- */
+
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 28px 20px 88px;
+}
+
+.head {
+  margin-bottom: 24px;
+}
+
+.title {
+  margin: 0 0 8px;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.subtitle {
+  margin: 2px 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.section {
+  margin: 28px 0;
+}
+
+.section-title {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+}
+
+/* ---------------- 数字卡 ---------------- */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 12px;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.stat-note {
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0.75;
+  margin-top: 2px;
+}
+
+/* ---------------- 标签列表 ---------------- */
+
+.tag-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.tag-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 9px 14px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tag-list li:last-child {
+  border-bottom: none;
+}
+
+.tag-name {
+  color: var(--text);
+}
+
+.tag-count {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------- 提示块 ---------------- */
+
+.alert {
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  margin: 16px 0;
+  border: 1px solid transparent;
+}
+
+.alert-ok {
+  background: var(--ok-bg);
+  color: var(--ok);
+  border-color: var(--ok);
+}
+
+.alert-error {
+  background: var(--err-bg);
+  color: var(--err);
+  border-color: var(--err);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.hint {
+  margin-top: 20px;
+  padding: 14px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.hint p {
+  margin: 6px 0;
+}
+
+/* ---------------- 杂项 ---------------- */
+
+.issue-list {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 13px;
+}
+
+.issue-list li {
+  margin: 6px 0;
+  color: var(--err);
+}
+
+.foot {
+  margin-top: 36px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.foot p {
+  margin: 6px 0;
+}
+
+.muted {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.9em;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--border);
+  color: var(--text);
+}
+
+/* ---------------- 通用按钮 ---------------- */
+
+.btn {
+  display: block;
+  width: 100%;
+  padding: 13px 18px;
+  font-size: 15px;
+  font-family: inherit;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.06s;
+}
+
+.btn:active {
+  transform: scale(0.99);
+}
+
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-block {
+  display: block;
+  width: 100%;
+}
+
+.btn-sm {
+  width: auto;
+  padding: 8px 20px;
+  font-size: 14px;
+}
+
+.btn-danger {
+  color: var(--err);
+  border-color: var(--err);
+}
+
+/* 顶栏占位，让中间的标题居中 */
+.bar-spacer {
+  display: inline-block;
+  width: 34px;
+  height: 34px;
+}
+
+/* ---------------- 通用提示条 ---------------- */
+
+.notice {
+  padding: 10px 13px;
+  border-radius: var(--radius);
+  font-size: 12.5px;
+  line-height: 1.6;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  color: var(--text-muted);
+  margin: 0 0 20px;
+}
+
+.foot-note {
+  margin-top: 22px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+/* ---------------- 标签与徽章 ---------------- */
+
+.chip {
+  display: inline-block;
+  padding: 1px 8px;
+  margin: 2px 4px 2px 0;
+  font-size: 11.5px;
+  border-radius: 20px;
+  background: var(--border);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.badge {
+  display: inline-block;
+  padding: 1px 9px;
+  font-size: 11.5px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.stars {
+  color: var(--accent);
+  letter-spacing: 1px;
+  font-size: 12px;
+}
+
+/* ---------------- 分题型对比条（结算页 / 统计页共用） ---------------- */
+
+.type-table {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px 14px;
+}
+
+.type-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 0;
+}
+
+.type-row + .type-row {
+  border-top: 1px solid var(--border);
+}
+
+.type-name {
+  flex: 0 0 42px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.type-bar {
+  flex: 1 1 auto;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.type-bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+}
+
+.type-value {
+  flex: 0 0 auto;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------- 警示提示条 ---------------- */
+
+.notice-warn {
+  border-left-color: var(--err);
+  color: var(--text);
+}
+
+/* ---------------- 底部 Tab 栏 ---------------- */
+
+.tabs {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  display: none;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.tabs-on {
+  display: flex;
+}
+
+.tab {
+  flex: 1 1 0;
+  padding: 11px 0 12px;
+  font-size: 12.5px;
+  font-family: inherit;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  letter-spacing: 0.5px;
+}
+
+.tab-on {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.tab-badge {
+  display: inline-block;
+  min-width: 15px;
+  margin-left: 4px;
+  padding: 0 4px;
+  font-size: 10px;
+  line-height: 15px;
+  font-weight: 600;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  vertical-align: 2px;
+}
+
+/* ---------------- 窄屏 ---------------- */
+
+@media (max-width: 420px) {
+  .page {
+    padding: 20px 14px 80px;
+  }
+  .stat-value {
+    font-size: 22px;
+  }
+}
