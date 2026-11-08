@@ -1,13 +1,15 @@
 /**
  * pwa.js —— Service Worker 注册（M5）
  *
- * 提供两个逃生口，避免被缓存困住：
+ * 提供三个逃生口，避免被缓存困住：
  *   ?nosw=1     本次访问注销 Service Worker 并清空全部缓存（开发调试用）
  *   window.__zztjRefreshCache()  供设置页「清除缓存并更新」按钮调用
+ *   新版本激活后自动刷新一次（M6-B 起）—— 否则用户要手动刷两次才看到新代码
  */
 
 const REGISTER_PATH = "./sw.js";
 const SCOPE = "./";
+const RELOAD_FLAG = "zj:sw-reloaded";
 
 function hasNoSw() {
   try {
@@ -43,6 +45,33 @@ if (typeof window !== "undefined") {
 }
 
 if ("serviceWorker" in navigator) {
+  /**
+   * 新 SW 接管时自动刷新一次。
+   *
+   * 为什么必须这么做：SW 对 JS/CSS 是 cache-first，旧 SW 仍控制页面时，
+   * 刷新拿到的是缓存里的旧文件；新 SW 装好要等「下一次」刷新才生效。
+   * 用户往往只刷一次，于是以为「改了没生效」。
+   *
+   * 两个防循环护栏：
+   *   1. 只在「页面本来就有 controller」时刷 —— 首次安装不刷；
+   *   2. sessionStorage 标记，本次浏览器会话最多自动刷一次。
+   */
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloading = false;
+
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!hadController || reloading) return;
+    try {
+      if (sessionStorage.getItem(RELOAD_FLAG)) return;
+      sessionStorage.setItem(RELOAD_FLAG, "1");
+    } catch (e) {
+      return;
+    }
+    reloading = true;
+    console.log("[pwa] 新版本已接管，正在自动刷新一次…");
+    location.reload();
+  });
+
   window.addEventListener("load", async () => {
     if (hasNoSw()) {
       await refreshCacheAndReload({ stripNoSw: true });
@@ -57,7 +86,7 @@ if ("serviceWorker" in navigator) {
         if (!next) return;
         next.addEventListener("statechange", () => {
           if (next.state === "activated") {
-            console.log("[pwa] 新版本已激活，下次刷新即为最新代码");
+            console.log("[pwa] 新版本已激活");
           }
         });
       });

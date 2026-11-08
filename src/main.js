@@ -8,7 +8,7 @@
  *   - 存储只经 store/storage.js，页面不碰 localStorage（D2）
  */
 
-import { loadQuestionBank } from "./core/loader.js";
+import { loadIndex, emptyBank, loadVolumes, volumeOfQid } from "./core/loader.js";
 import { createSession, restoreSession, answeredCount, MODE } from "./core/session.js";
 import { emptyStats, overallAccuracy, applyAnswer as applyStatsAnswer } from "./core/stats.js";
 import {
@@ -30,6 +30,7 @@ import { createWrongPage } from "./pages/wrong/view.js";
 import { createStatsPage } from "./pages/stats/view.js";
 import { createSettingsPage } from "./pages/settings/view.js";
 import { createReviewPage } from "./pages/review/view.js";
+import { createScopePage } from "./pages/scope/view.js";
 import { esc } from "./ui/dom.js";
 
 const app = document.getElementById("app");
@@ -93,6 +94,41 @@ function paint({ keepScroll = false } = {}) {
   app.innerHTML = page ? page.render() : "";
   window.scrollTo(0, keepScroll ? y : 0);
   renderTabs(router.current().name);
+}
+
+/**
+ * 按需下载卷并并入 bank（M6-D）。
+ *
+ * 失败只警告不抛出：某卷文件坏了，不该让整个应用打不开；
+ * 上层会在题目为空时给出提示。
+ */
+async function ensureVolumes(ids) {
+  if (!Array.isArray(ids) || !ids.length) return [];
+  const { bank, failures } = await loadVolumes(appState.bank, ids);
+  appState.bank = bank;
+  window.__bank = bank;
+  if (failures.length) {
+    console.warn(
+      "[loader] 部分卷加载失败：",
+      failures.map((f) => `${f.id}（${f.error.message}）`)
+    );
+  }
+  return failures;
+}
+
+/** 所有卷的 id（用于「不限范围」时按需加载）。 */
+function allVolumeIds() {
+  return appState.bank.volumes.map((v) => v.id);
+}
+
+/** 一组题号涉及的卷 id，去重。 */
+function volumesOfQids(qids) {
+  const out = [];
+  for (const id of qids) {
+    const v = volumeOfQid(id);
+    if (v && !out.includes(v)) out.push(v);
+  }
+  return out;
 }
 
 /**
@@ -198,17 +234,33 @@ function resumeInfo() {
   return { answered, total: s.queue.length, mode: s.mode };
 }
 
-function startSession(mode, tag, limit, onlyIds = null) {
+async function startSession(mode, tag, limit, onlyIds = null, volumeIds = null) {
+  /* 先算出这一轮要用哪些卷，按需下载（M6-D）。
+     不限范围 = 全部卷；只刷错题 = 错题所在的那几卷。 */
+  const ids =
+    mode === MODE.WRONG_ONLY
+      ? volumesOfQids(Object.keys(appState.wrong))
+      : volumeIds && volumeIds.length
+        ? volumeIds
+        : allVolumeIds();
+
+  const failures = await ensureVolumes(ids);
+  if (failures.length && !appState.bank.loaded.length) {
+    window.alert("题库加载失败，请检查网络后重试。");
+    return;
+  }
+
   const session = createSession({
     questions: appState.bank.questions,
     mode,
     tag,
     limit,
+    volumeIds,
     onlyIds: onlyIds || (mode === MODE.WRONG_ONLY ? Object.keys(appState.wrong) : null),
   });
 
   if (!session.queue.length) {
-    window.alert("该条件下没有题目，请换一个模式或事件再试。");
+    window.alert("该条件下没有题目，请换一个模式或范围再试。");
     return;
   }
 
@@ -221,7 +273,7 @@ function startSession(mode, tag, limit, onlyIds = null) {
 
 const router = createRouter({
   fallback: "home",
-  onChange(name, params) {
+  async onChange(name, params) {
     if (TABS.some((t) => t.name === name)) lastTab = name;
 
     if (name === "quiz") {
@@ -231,6 +283,8 @@ const router = createRouter({
         return;
       }
       appState.session = session;
+      /* 题目可能还没下载（M6-D），先补齐再画，避免出现空题干 */
+      await ensureVolumes(volumesOfQids(session.queue));
       page = createQuizPage({
         bank: appState.bank,
         session,
@@ -261,7 +315,7 @@ const router = createRouter({
         session: appState.session,
         onRestart() {
           const s = appState.session;
-          startSession(s.mode, s.filter.tag, s.filter.limit);
+          startSession(s.mode, s.filter.tag, s.filter.limit, null, s.filter.volumeIds);
         },
         onHome() {
           appState.session = null;
@@ -269,6 +323,9 @@ const router = createRouter({
         },
       });
     } else if (name === "wrong") {
+      /* 错题本要显示题干，先按需下载错题所在的卷（M6-D）。
+         首帧用现有数据画，下载完再重画一次，避免白屏等网络。 */
+      const wrongIds = volumesOfQids(Object.keys(appState.wrong));
       page = createWrongPage({
         bank: appState.bank,
         getWrong: () => appState.wrong,
@@ -287,6 +344,11 @@ const router = createRouter({
           router.go("review", qid);
         },
       });
+      if (wrongIds.length) {
+        ensureVolumes(wrongIds).then(() => {
+          if (router.current().name === "wrong") paint({ keepScroll: true });
+        });
+      }
     } else if (name === "stats") {
       page = createStatsPage({
         bank: appState.bank,
@@ -319,12 +381,29 @@ const router = createRouter({
         },
       });
     } else if (name === "review") {
+      const qid = params && params[0] ? params[0] : null;
+      /* 单题回顾只需要它所在的那一卷 */
+      const vid = volumeOfQid(qid);
+      if (vid) await ensureVolumes([vid]);
       page = createReviewPage({
         bank: appState.bank,
-        qid: params && params[0] ? params[0] : null,
+        qid,
         history: appState.history,
         onBack() {
           router.go(lastTab);
+        },
+      });
+    } else if (name === "scope") {
+      page = createScopePage({
+        bank: appState.bank,
+        initialVolumes: appState.settings.lastScopeVolumes,
+        initialLimit: appState.settings.lastScopeLimit,
+        onStart({ volumeIds, limit }) {
+          commitSettings({ lastScopeVolumes: volumeIds, lastScopeLimit: limit });
+          startSession(MODE.CUSTOM, null, limit, null, volumeIds);
+        },
+        onBack() {
+          router.go("home");
         },
       });
     } else {
@@ -342,8 +421,8 @@ const router = createRouter({
             goal: appState.settings.dailyGoal,
           },
         },
-        onStart({ mode, tag, limit }) {
-          startSession(mode, tag, limit);
+        onStart({ mode, tag, limit, volumeIds }) {
+          startSession(mode, tag, limit, null, volumeIds);
         },
         onResume() {
           router.go("quiz");
@@ -355,6 +434,9 @@ const router = createRouter({
         },
         onSettings() {
           router.go("settings");
+        },
+        onScope() {
+          router.go("scope");
         },
       });
     }
@@ -454,7 +536,7 @@ function renderError(message) {
       <div class="hint">
         <p>常见原因：</p>
         <p>1. 直接双击了 index.html —— 必须通过 <code>run.bat</code> 启动本地服务。</p>
-        <p>2. <code>data/questions.v01.json</code> 存在语法错误 —— 运行 <code>python tools/check.py</code> 查看具体行号。</p>
+        <p>2. <code>data/meta.json</code> 或某一卷题库存在语法错误 —— 运行 <code>python tools/check.py --all</code> 查看具体行号。</p>
       </div>
     </main>`;
 }
@@ -463,7 +545,10 @@ async function boot() {
   app.innerHTML = `<main class="page"><p class="muted">正在加载题库…</p></main>`;
 
   try {
-    appState.bank = await loadQuestionBank("data/questions.v01.json");
+    /* M6-D：启动只读索引（几 KB），不下载任何卷。
+       首页、范围页、统计页都只靠索引即可渲染。 */
+    const indexData = await loadIndex();
+    appState.bank = emptyBank(indexData);
     window.__bank = appState.bank;
 
     const metaState = storage.ensureMeta();
@@ -471,9 +556,11 @@ async function boot() {
 
     reloadFromStorage();
 
-    /* 恢复未完成的那一轮 */
+    /* 恢复未完成的那一轮：先下载它涉及的卷，才能校验题号是否还有效 */
     const snapshot = storage.readSession();
     if (snapshot) {
+      const ids = volumesOfQids(Array.isArray(snapshot.queue) ? snapshot.queue : []);
+      await ensureVolumes(ids);
       appState.session = restoreSession(snapshot, appState.bank.index);
       if (!appState.session) storage.clearSession();
     }
@@ -485,8 +572,10 @@ async function boot() {
     }
 
     const resumed = resumeInfo();
+    const totals = appState.bank.meta.totals;
     console.log(
-      `[M4] 题库 ${appState.bank.questions.length} 题；累计 ${appState.stats.totalAnswered} 题；` +
+      `[M6] 索引 ${totals.volumes} 卷 ${totals.questions} 题（待核对 ${totals.pending}）；` +
+        `已载入 ${appState.bank.loaded.length} 卷；累计 ${appState.stats.totalAnswered} 题；` +
         `错题 ${countWrong(appState.wrong)} 条；日志 ${appState.history.length} 条；` +
         `未完成会话 ${resumed ? `${resumed.answered}/${resumed.total}` : "无"}`
     );

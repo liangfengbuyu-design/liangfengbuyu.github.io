@@ -116,11 +116,11 @@ export function createStatsPage({ bank, getStats, getWrongCount, onSettings }) {
             <div class="stat-label">错题本</div>
           </div>
           <div class="stat">
-            <div class="stat-value">${bank.questions.length}</div>
+            <div class="stat-value">${(bank.meta.totals && bank.meta.totals.questions) || bank.questions.length}</div>
             <div class="stat-label">题库总量</div>
           </div>
           <div class="stat">
-            <div class="stat-value">${bank.questions.filter((q) => q.verify && q.verify.status === "pending").length}</div>
+            <div class="stat-value">${(bank.meta.totals && bank.meta.totals.pending) || 0}</div>
             <div class="stat-label">待核对</div>
           </div>
         </div>

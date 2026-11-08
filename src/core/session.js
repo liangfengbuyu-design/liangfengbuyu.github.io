@@ -13,6 +13,8 @@ export const MODE = {
   RANDOM: "random",
   BY_TAG: "byTag",
   WRONG_ONLY: "wrongOnly",
+  /* 自定义范围：按卷次勾选（M6-B）。与 RANDOM 的区别只是「池子由用户指定」。 */
+  CUSTOM: "custom",
 };
 
 function shuffle(list) {
@@ -26,6 +28,19 @@ function shuffle(list) {
   return a;
 }
 
+/** 归一化卷次筛选：空数组 / null / undefined 都视为「不限」。 */
+export function normalizeVolumeIds(volumeIds) {
+  if (!Array.isArray(volumeIds)) return [];
+  const seen = new Set();
+  const out = [];
+  for (const v of volumeIds) {
+    if (typeof v !== "string" || !v || seen.has(v)) continue;
+    seen.add(v);
+    out.push(v);
+  }
+  return out;
+}
+
 /**
  * 生成一轮会话。
  * @param {object} opts
@@ -33,10 +48,26 @@ function shuffle(list) {
  * @param {string} opts.mode      MODE 之一
  * @param {string} [opts.tag]     BY_TAG 模式下的标签
  * @param {number} [opts.limit]   0 表示不限（不截断）
- * @param {Array<string>} [opts.onlyIds] WRONG_ONLY 模式传入题目 id 列表
+ * @param {Array<string>} [opts.onlyIds]   WRONG_ONLY 模式传入题目 id 列表
+ * @param {Array<string>} [opts.volumeIds] 只取这些卷的题（CUSTOM 及其他模式都可用）
  */
-export function createSession({ questions, mode = MODE.SEQUENCE, tag = null, limit = 0, onlyIds = null }) {
+export function createSession({
+  questions,
+  mode = MODE.SEQUENCE,
+  tag = null,
+  limit = 0,
+  onlyIds = null,
+  volumeIds = null,
+}) {
   let pool = Array.isArray(questions) ? questions.slice() : [];
+  const vols = normalizeVolumeIds(volumeIds);
+
+  /* 卷次筛选对所有模式生效：即便是「随机刷」，也只在选中的卷里随机 */
+  if (vols.length) {
+    const wanted = new Set(vols);
+    /* 题目缺 vol 字段（老数据）时放行，宁可多给一题，也不要静默丢题 */
+    pool = pool.filter((q) => !q.vol || wanted.has(q.vol));
+  }
 
   if (mode === MODE.WRONG_ONLY) {
     const wanted = new Set(Array.isArray(onlyIds) ? onlyIds : []);
@@ -45,7 +76,8 @@ export function createSession({ questions, mode = MODE.SEQUENCE, tag = null, lim
     pool = pool.filter((q) => Array.isArray(q.tags) && tag && q.tags.includes(tag));
   }
 
-  if (mode === MODE.RANDOM || mode === MODE.BY_TAG) {
+  /* RANDOM / BY_TAG / CUSTOM 都要打乱 —— CUSTOM 的「跨卷混合随机」就由此实现 */
+  if (mode === MODE.RANDOM || mode === MODE.BY_TAG || mode === MODE.CUSTOM) {
     pool = shuffle(pool);
   }
 
@@ -56,7 +88,7 @@ export function createSession({ questions, mode = MODE.SEQUENCE, tag = null, lim
   return {
     sessionId: String(Date.now()),
     mode,
-    filter: { tag: tag || null, limit: limit || 0 },
+    filter: { tag: tag || null, limit: limit || 0, volumeIds: vols },
     queue: pool.map((q) => q.id),
     cursor: 0,
     answers: {},
@@ -215,7 +247,10 @@ export function restoreSession(raw, validIds) {
   return {
     sessionId: typeof raw.sessionId === "string" ? raw.sessionId : String(Date.now()),
     mode: raw.mode || MODE.SEQUENCE,
-    filter: raw.filter && typeof raw.filter === "object" ? raw.filter : { tag: null, limit: 0 },
+    filter:
+      raw.filter && typeof raw.filter === "object"
+        ? { tag: null, limit: 0, volumeIds: [], ...raw.filter }
+        : { tag: null, limit: 0, volumeIds: [] },
     queue,
     cursor,
     answers,

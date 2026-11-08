@@ -11,6 +11,9 @@ export const DAILY_GOALS = [5, 10, 15, 20];
 export const DEFAULT_SETTINGS = {
   dailyGoal: 10,
   theme: "auto",
+  /* 自定义范围页上次的选择（M6-B）：卷次与题量，让下次进来不用重新勾 */
+  lastScopeVolumes: [],
+  lastScopeLimit: 20,
 };
 
 export function normalizeSettings(raw) {
@@ -21,7 +24,14 @@ export function normalizeSettings(raw) {
 
   const theme = THEMES.includes(src.theme) ? src.theme : DEFAULT_SETTINGS.theme;
 
-  return { dailyGoal, theme };
+  const vols = Array.isArray(src.lastScopeVolumes)
+    ? src.lastScopeVolumes.filter((v) => typeof v === "string" && v)
+    : [];
+
+  const lim = Number(src.lastScopeLimit);
+  const lastScopeLimit = Number.isFinite(lim) && lim >= 0 ? lim : DEFAULT_SETTINGS.lastScopeLimit;
+
+  return { dailyGoal, theme, lastScopeVolumes: vols, lastScopeLimit };
 }
 
 export const THEME_LABEL = {

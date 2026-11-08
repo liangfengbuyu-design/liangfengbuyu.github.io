@@ -15,7 +15,7 @@
  *         这样既满足「缓存优先」的速度，又避免改了题库却看不到
  */
 
-const VERSION = "20261101-160016";
+const VERSION = "20261108-210711";
 
 const SHELL_CACHE = `zztj-shell-${VERSION}`;
 const DATA_CACHE = "zztj-data-v1";
@@ -61,6 +61,8 @@ const SHELL_ASSETS = [
   "./src/pages/settings/style.css",
   "./src/pages/review/view.js",
   "./src/pages/review/style.css",
+  "./src/pages/scope/view.js",
+  "./src/pages/scope/style.css",
 ];
 
 /* ------------------------------------------------------------ install */
@@ -71,15 +73,26 @@ self.addEventListener("install", (event) => {
       const cache = await caches.open(SHELL_CACHE);
       await cache.addAll(SHELL_ASSETS);
 
-      /* 题库也预存一份种子。
-         原因：首次访问时 SW 尚未接管页面，页面发起的题库请求不经过 fetch 事件，
-         若不在这里种子，首访后立刻断网就没有题库可用。
-         之后题库靠 stale-while-revalidate 自动更新，不需要重装 SW。 */
+      /* 索引必须预存（启动就要用）。
+         所有卷也一并预存 —— 每卷约 30 KB，十几卷也不过几百 KB，
+         换来的好处是「装好就能离线刷任意卷」，不会出现"切到第二卷发现没网"。
+         卷数很多（几十卷以上）时可改为只预存前两卷 + 访问时缓存。 */
       try {
         const dataCache = await caches.open(DATA_CACHE);
-        await dataCache.add("./data/questions.v01.json");
+        const res = await fetch("./data/meta.json", { cache: "no-store" });
+        if (res && res.ok) {
+          await dataCache.put("./data/meta.json", res.clone());
+          const idx = await res.json();
+          const vols = idx && Array.isArray(idx.volumes) ? idx.volumes : [];
+          /* 逐卷 add，单卷失败不影响其他卷 */
+          await Promise.all(
+            vols
+              .filter((v) => v && typeof v.file === "string" && v.file)
+              .map((v) => dataCache.add("./" + v.file).catch(() => null))
+          );
+        }
       } catch (e) {
-        /* 题库暂时取不到不影响离线外壳，忽略 */
+        /* 题库暂时取不到不影响离线外壳 */
       }
 
       /* 静默更新：不等用户点确认，新版本立即进入等待→激活 */

@@ -25,10 +25,15 @@ export function summarize(bank) {
     if (!q.source || q.source.quote === null) emptyQuote += 1;
   }
 
-  const events = ((meta.tagGroups && meta.tagGroups.events) || []).map((tag) => {
-    const count = qs.filter((q) => q.source && q.source.event === tag).length;
-    return { tag, count };
-  });
+  /* 只统计「当前已加载题目里真的有题」的事件。
+     索引里的全库事件清单在 meta.tagGroups.events 里，两者用途不同：
+     那个用于「按事件刷」的标签列表，这个用于校准题量分布。 */
+  const events = ((meta.tagGroups && meta.tagGroups.events) || [])
+    .map((tag) => {
+      const count = qs.filter((q) => q.source && q.source.event === tag).length;
+      return { tag, count };
+    })
+    .filter((e) => e.count > 0);
 
   return {
     total: qs.length,

@@ -12,6 +12,7 @@ const MODE_LABEL = {
   random: "随机刷",
   byTag: "按事件刷",
   wrongOnly: "只刷错题",
+  custom: "自定义范围",
 };
 
 export function createSummaryPage({ bank, session, onRestart, onHome }) {

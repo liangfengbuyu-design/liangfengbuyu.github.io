@@ -35,8 +35,12 @@ export function createSettingsPage({
   }
 
   function render() {
-    const total = bank.questions.length;
-    const pending = bank.questions.filter((q) => q.verify && q.verify.status === "pending").length;
+    const totals = bank.meta.totals || {};
+    const total = totals.questions || bank.questions.length;
+    const pending =
+      typeof totals.pending === "number"
+        ? totals.pending
+        : bank.questions.filter((q) => q.verify && q.verify.status === "pending").length;
 
     return `
       <main class="page page-settings">

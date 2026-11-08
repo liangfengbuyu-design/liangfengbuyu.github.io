@@ -1,0 +1,131 @@
+/* 自定义范围选择页（S7）样式 */
+
+.scope-head {
+  position: relative;
+}
+
+.scope-back {
+  margin: 0 0 6px;
+  padding: 0;
+  font-size: 13px;
+}
+
+/* 汇总条 */
+.scope-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.scope-sum {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.scope-sum b {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.scope-actions {
+  display: flex;
+  gap: 12px;
+  flex: 0 0 auto;
+}
+
+.scope-actions .link-btn {
+  margin-top: 0;
+  font-size: 12.5px;
+}
+
+/* 卷次列表 */
+.vol-list {
+  list-style: none;
+  margin: 0 0 18px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vol-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 12px 14px;
+  font-family: inherit;
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.vol-row:active {
+  transform: scale(0.995);
+}
+
+.vol-row-on {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.vol-check {
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: #fff;
+  font-size: 12.5px;
+  line-height: 1;
+}
+
+.vol-row-on .vol-check {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.vol-main {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.vol-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.vol-meta {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 窄屏 */
+@media (max-width: 420px) {
+  .scope-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .seg {
+    padding: 8px 13px;
+  }
+}
